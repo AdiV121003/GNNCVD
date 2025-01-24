@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 # Import your GCN model and dataset processing methods
-from gnn_model import GCN, clang_process
+from gcn_def import GCN, clang_process
 
 # Set up the Streamlit app
 st.title("Code Vulnerability Detector")
