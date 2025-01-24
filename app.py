@@ -1,4 +1,4 @@
-!pip install streamlit torch torch-geometric pandas
+pip install streamlit torch torch-geometric pandas
 import streamlit as st
 import pandas as pd
 import torch
