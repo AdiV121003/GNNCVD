@@ -158,7 +158,7 @@ class MyOwnDataset(Dataset):
                                  f'data_{idx}.pt'))
         return data
 
-dataset = MyOwnDataset(root='/content/')
+dataset = MyOwnDataset(root='./cvd/')
 
 len(dataset)
 
