@@ -334,15 +334,3 @@ for epoch in range(200):
         print("Early stopping due to no improvement.")
         break
 print(f"Finishing training with best val loss: {best_loss}")
-
-NUM_GRAPHS_PER_BATCH_1 = 4835
-test_loader_all = DataLoader(test_dataset, batch_size=NUM_GRAPHS_PER_BATCH_1,drop_last=True, shuffle=True)
-
-import torch
-
-# Save model
-torch.save(model.state_dict(), "gnn_model.pth")
-
-# Load model in deployment script
-model.load_state_dict(torch.load("gnn_model.pth"))
-model.eval() 
