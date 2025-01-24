@@ -27,7 +27,7 @@ from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino'], 'size'   : 24})
 rc('text', usetex=True)
 
-vdisc = pd.read_csv("/content/dataset vdisc CWE.csv")
+vdisc = pd.read_csv("cvd/dataset vdisc CWE.csv")
 vdisc["bug"] = vdisc["bug"].astype(int)
 
 vdisc.info()
