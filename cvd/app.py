@@ -1,5 +1,3 @@
-!apt-get update
-!apt-get install -y llvm clang libclang-dev
 !pip install clang
 import clang.cindex
 
