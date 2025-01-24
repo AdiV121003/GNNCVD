@@ -1,4 +1,3 @@
-!pip install clang
 import clang.cindex
 
 
