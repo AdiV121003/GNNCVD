@@ -9,7 +9,6 @@ Original file is located at
 This notebook shows the steps of extracting ASTs, building the dataset on Pytorch Geometric and then applying GNN model for graph embedding as well as predicting
 """
 
-!pip install torch_geometric
 
 import torch
 from torch_geometric.data import InMemoryDataset
@@ -28,17 +27,10 @@ from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino'], 'size'   : 24})
 rc('text', usetex=True)
 
-import matplotlib
-import matplotlib.font_manager as fm
-
-"""Uploading a processed CWE type:"""
-
 vdisc = pd.read_csv("/content/vdisc_CWE_469.csv.gz")
 vdisc["bug"] = vdisc["bug"].astype(int)
 
 vdisc.info()
-
-"""Extracting AST"""
 
 def save_ast(node):
 
@@ -136,8 +128,6 @@ def clang_process(testcase, **kwargs):
 
     return Data(x=nodes_embedding, edge_index=graphs_embedding, y=y)
 
-"""Building the dataset on Pytorch geometrics"""
-
 class MyOwnDataset(Dataset):
     def __init__(self, root, transform=None, pre_transform=None):
         super(MyOwnDataset, self).__init__(root, transform, pre_transform)
@@ -184,8 +174,6 @@ print(dataset[2].x)
 
 print(dataset[2].y)
 
-"""Split up the dataset"""
-
 dataset = dataset.shuffle()
 #one_tenth_length = int(len(dataset) * 0.1)
 one_tenth_length = int(len(dataset) * 0.1)
@@ -201,8 +189,6 @@ NUM_GRAPHS_PER_BATCH = 256
 train_loader = DataLoader(train_dataset, batch_size=NUM_GRAPHS_PER_BATCH,drop_last=True, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=NUM_GRAPHS_PER_BATCH,drop_last=True, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=NUM_GRAPHS_PER_BATCH,drop_last=True, shuffle=True)
-
-"""Building the GNN model"""
 
 import torch
 from torch.nn import Linear, Dropout
@@ -309,8 +295,6 @@ def evaluate(loader):
     # print(labels)
     return accuracy_score(labels, predictions), loss
 
-"""Training the model"""
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = GCN().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
@@ -349,11 +333,6 @@ for epoch in range(200):
         break
 print(f"Finishing training with best val loss: {best_loss}")
 
-"""Plotting the learning curves
-
-Printing out the performance metrics
-"""
-
 NUM_GRAPHS_PER_BATCH_1 = 4835
 test_loader_all = DataLoader(test_dataset, batch_size=NUM_GRAPHS_PER_BATCH_1,drop_last=True, shuffle=True)
 
@@ -364,14 +343,4 @@ torch.save(model.state_dict(), "gnn_model.pth")
 
 # Load model in deployment script
 model.load_state_dict(torch.load("gnn_model.pth"))
-model.eval()
-
-
-
-from google.colab import drive
-drive.mount('/content/drive')
-
-!pip install streamlit
-import streamlit
-!streamlit run app.py
-
+model.eval() 
