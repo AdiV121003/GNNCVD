@@ -21,7 +21,7 @@ Upload a code file to analyze its potential security risks.
 # Initialize the model
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = GCN().to(device)
-model_path = "best_model.pth"  # Path to your saved model
+model_path = "gnn_model.pth"  # Path to your saved model
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
