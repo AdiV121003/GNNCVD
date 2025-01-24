@@ -1,82 +1,80 @@
 import streamlit as st
-import pandas as pd
 import torch
-import torch.nn.functional as F
-from torch_geometric.data import Data
-from torch_geometric.nn import GCNConv
-from io import StringIO
+from torch_geometric.data import DataLoader, Data
+import clang.cindex
+import numpy as np
+from sklearn.metrics import accuracy_score
 
-# Define the GCN Model
-class GCN(torch.nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(GCN, self).__init__()
-        self.conv1 = GCNConv(input_dim, hidden_dim)
-        self.conv2 = GCNConv(hidden_dim, output_dim)
+# Import your GCN model and dataset processing methods
+from gnn_model import GCN, clang_process
 
-    def forward(self, data):
-        x, edge_index = data.x, data.edge_index
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        return torch.sigmoid(x)  # Sigmoid activation for binary classification
+# Set up the Streamlit app
+st.title("Code Vulnerability Detector")
+st.write("""
+This application uses a GCN-based model to detect vulnerabilities in source code. 
+Upload a code file to analyze its potential security risks.
+""")
 
-# Load the trained model
-@st.cache_resource
-def load_model():
-    model = GCN(input_dim=16, hidden_dim=32, output_dim=1)  # Adjust input_dim as needed
-    model.load_state_dict(torch.load("gcn_model.pth", map_location=torch.device('cpu')))
-    model.eval()
-    return model
+# Initialize the model
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = GCN().to(device)
+model_path = "best_model.pth"  # Path to your saved model
+model.load_state_dict(torch.load(model_path, map_location=device))
+model.eval()
 
-model = load_model()
-
-# Streamlit UI
-st.title("🔍 Code Vulnerability Detector")
-
-# Upload CSV File
-uploaded_file = st.file_uploader("Upload a CSV file with code snippets", type=["csv"])
-
+# File upload
+uploaded_file = st.file_uploader("Upload your source code file", type=["c", "cpp"])
 if uploaded_file is not None:
-    # Read CSV File
-    df = pd.read_csv(uploaded_file)
+    # Read the uploaded file
+    code = uploaded_file.read().decode("utf-8")
+    filename = uploaded_file.name
+    st.code(code, language="c")
 
-    # Display uploaded file
-    st.write("📂 Uploaded Data:")
-    st.dataframe(df.head())
+    # Preprocess the code to extract graph data
+    st.write("Processing the code for analysis...")
+    try:
+        class TestCase:
+            def __init__(self, filename, code):
+                self.filename = filename
+                self.code = code
+                self.bug = 0  # Placeholder label
 
-    # Preprocess data
-    def preprocess_data(df):
-        data_list = []
-        for _, row in df.iterrows():
-            # Convert 'code' into a numerical representation (dummy example)
-            x = torch.randn((10, 16))  # Example feature tensor (adjust as needed)
-            edge_index = torch.randint(0, 10, (2, 20))  # Example graph structure
-            y = torch.tensor([1.0]) if row["bug"] else torch.tensor([0.0])  # Binary labels
-            
-            data = Data(x=x, edge_index=edge_index, y=y)
-            data_list.append(data)
-        return data_list
+        testcase = TestCase(filename, code)
+        data = clang_process(testcase)
 
-    # Convert dataframe to graph data
-    graph_data = preprocess_data(df)
+        # Perform inference
+        data = data.to(device)
+        prediction = model(data.x.float(), data.edge_index, torch.tensor([0], device=device))
+        prediction = torch.sigmoid(prediction).item()
 
-    # Make predictions
-    predictions = []
-    for data in graph_data:
-        with torch.no_grad():
-            pred = model(data).item()
-            predictions.append(pred > 0.5)  # Thresholding at 0.5
+        # Display result
+        st.subheader("Prediction")
+        if prediction >= 0.5:
+            st.error(f"The code is likely vulnerable (Score: {prediction:.2f})")
+        else:
+            st.success(f"The code is likely safe (Score: {prediction:.2f})")
+    except Exception as e:
+        st.error(f"An error occurred during processing: {e}")
 
-    # Add predictions to dataframe
-    df["Predicted Vulnerability"] = ["✅ Safe" if not p else "⚠️ Vulnerable" for p in predictions]
+# Example Section
+st.sidebar.header("Examples")
+st.sidebar.write("Download sample code files to test the app:")
+st.sidebar.download_button(
+    label="Download Sample Vulnerable Code",
+    data="int main() { int *ptr = NULL; *ptr = 42; return 0; }",
+    file_name="vulnerable_code.c"
+)
+st.sidebar.download_button(
+    label="Download Sample Safe Code",
+    data="int main() { int x = 42; printf('%d', x); return 0; }",
+    file_name="safe_code.c"
+)
 
-    # Show results
-    st.subheader("🔎 Results")
-    st.dataframe(df)
+# Display metrics section
+if st.button("Show Model Summary"):
+    st.subheader("Model Architecture")
+    st.text(str(model))
+    st.write(f"Number of parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
-    # Download results
-    csv_output = StringIO()
-    df.to_csv(csv_output, index=False)
-    st.download_button("📥 Download Results", csv_output.getvalue(), "results.csv", "text/csv")
+st.write("Developed with ❤️ using Streamlit and PyTorch Geometric.")
 
-st.write("Developed with ❤️ using Streamlit & PyTorch Geometric")
