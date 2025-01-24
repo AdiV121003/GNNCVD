@@ -145,7 +145,7 @@ class MyOwnDataset(Dataset):
         pass
 
     def process(self):
-        self.data = pd.read_csv("/content/vdisc_CWE_469.csv.gz")
+        self.data = pd.read_csv("cvd/dataset vdisc CWE.csv")
         for index, vuln in tqdm(self.data.iterrows(), total=self.data.shape[0]):
             data = clang_process(vuln)
             torch.save(data, os.path.join(self.processed_dir, f'data_{index}.pt'))
