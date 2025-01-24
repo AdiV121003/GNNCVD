@@ -1,3 +1,9 @@
+!apt-get update
+!apt-get install -y llvm clang libclang-dev
+!pip install clang
+import clang.cindex
+
+
 import streamlit as st
 import torch
 from torch_geometric.data import DataLoader, Data
