@@ -10,6 +10,11 @@ from sklearn.metrics import accuracy_score
 
 # Import your GCN model and dataset processing methods
 from gcn_def import GCN, clang_process
+import os
+
+os.environ['LIBCLANG_PATH'] = '/usr/lib/llvm-12/lib'
+clang.cindex.Config.set_library_file('/usr/lib/llvm-12/lib/libclang.so')
+
 
 # Set up the Streamlit app
 st.title("Code Vulnerability Detector")
