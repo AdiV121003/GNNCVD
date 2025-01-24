@@ -18,7 +18,9 @@ from sklearn.metrics import confusion_matrix, f1_score, \
     accuracy_score, precision_score, recall_score
 from torch_geometric.data import Dataset
 
+
 import clang.cindex
+clang.cindex.Config.set_library_file('/usr/lib/llvm-12/lib/libclang.so')
 import os
 import numpy as np
 import pandas as pd
